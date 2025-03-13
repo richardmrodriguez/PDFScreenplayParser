@@ -1,7 +1,7 @@
 # PDFScreenplayParser
 Parses a screenplay-formatted PDF document into an object of screenplay-typed elements
 
-# Usage
+# Interface
 
 This relies upon an **external** PDF parser / extractor, and expects a document struct like so:
 
