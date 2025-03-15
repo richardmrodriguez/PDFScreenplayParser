@@ -3,7 +3,7 @@ Parses a screenplay-formatted PDF document into an object of screenplay-typed el
 
 # Interface
 
-This relies upon an **external** PDF parser / extractor, and expects a document struct like so:
+This relies upon an **external** PDF parser / extractor, and expects a document struct that looks sort of like this:
 
 ```
 Document: [
@@ -28,6 +28,6 @@ Document: [
 ]
 ```
 
-By using the position, Font name, and font size of each text fragment, we can determine what kind of Screenplay Element each fragment or line should be.
+By using the position, font name, and font size of each text fragment, we can determine what kind of Screenplay Element each fragment or line should be.
 
-We return a new version of this struct, which is simplified, abstracted, and has a ScreenplayElementType and possibly other metadata attached to each TextElement.
+We return a new version of this struct, which is logically optimized, and assigns a specific type `SPType` to each individual `SPTextElement`. The returned ScreenplayDoc struct is ready for Screenplay-related processing and displaying.
