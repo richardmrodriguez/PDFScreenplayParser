@@ -1,35 +1,71 @@
+
+
 #pragma once
+
 #include <"pdf_screenplay_parser.hpp>
 #include <cstddef>
 #include <codecvt>
 #include <locale>
 #include <cmath>
+#include <ceil>
+
+// MARGINS are relative from 0,0 , the BOTTOM and LEFT
+struct SPMarginsInches
+{
+    float pagewidth =       8.50;
+    float pageheight =      11.00:
+
+    float left =            1.50;
+    float right =           7.50;
+    float top =             10.00;
+    float bottom =          1.00;
+    // Element margins, relative to left side of page
+    float action =          1.50;
+    float character =       3.70;
+    float dialogue =        2.50;
+    float parenthetical =   3.10;
+
+    //TODO: dual dialogue...
+    //TODO: 
+
+
+}
+
+struct SPMarginsPoints
+{
+    //
+}
 
 ScreenplayDoc get_screenplay_doc(PDFDoc pdfdoc) {
     ScreenplayDoc new_screenplay_doc;
-    new_screenplay_doc.pages.reserve(pdf_doc.pages.size())
+    new_screenplay_doc.pages.reserve(pdf_doc.pages.size());
 
-    for (size_t p = 0; p < pdfdoc.pages.size(); p++) {
+    for (size_t p = 0; p < pdfdoc.pages.size(); p++) 
+    {
         const PDFPage&  pdfpage = pdfdoc.pages[p];
         ScreenplayPage new_page;
         new_page.lines.reserve(pdfpage.lines.size());
         
-        float prev_line_height = 0.0f; // used to insert blank lines before adding the current line
+        float prev_line_y_pos = 0.0f; // used to insert blank lines before adding the current line
+        float line_height = 12.0f;
 
 
-        for (size_t l = 0; l < pdfpage.lines.size(); l++) {
+        for (size_t l = 0; l < pdfpage.lines.size(); l++) 
+        {         
             const PDFLine& pdfline = pdfpage.lines[l];
             ScreenplayLine new_line;
             new_line.words.reserve(pdfline.words.size());
             
-            for (size_t w = 0; w < pdfline.words.size(); w++) {
+            for (size_t w = 0; w < pdfline.words.size(); w++) 
+            {
                 const PDFWord& pdfword = pdfline.words[w];
                 ScreenplayTextElement new_text_element;
                 // slighly more complex logic in here ;
                 // Might need to carry a running "context" of the previous line(s) / type(s) to determine certain elements
                 SPType new_type = get_type_for_word(pdfword);
 
-                switch new_type {
+                switch new_type 
+                {
                     case SPType::NON_CONTENT_LEFT: continue;
                     case SPType::SP_PAGENUM: {
                         new_page.pagenum = pdfword.text;
@@ -59,71 +95,86 @@ ScreenplayDoc get_screenplay_doc(PDFDoc pdfdoc) {
                 }
                 
                 new_text_element.element_type = new_type;
-                new_text_element.text = pdfword.text;
+                new_text_element.text = pdfword.text;                
                 new_line.text_elements.push_back(new_text_element);
-
-                // IMPORTANT TODO: Insert BLANK LINES **before** adding the current line, to ensure PROPER VERTICAL SPACING!
-                //if pdfword.position.y -
-
 
             }
 
+            // Insert BLANK LINES **before** adding the current line, to ensure proper vertical spacing!
+            float cur_y_pos = pdfline.words[0].position.y;
+            if (prev_line_y_pos > 1.0) 
+            {
+                float y_delta = prev_line_y_pos - cur_y_pos;
+                if (y_delta > line_height)  
+                {
+                    int blank_lines = ceil(y_delta / line_height);
+                    ScreenplayLine blank_line;
+                    ScreenplayTextElement blank_element;
+                    blankline.text_elements.push_back(blank_element);
+
+                    for (int i = 1; i < blank_lines; i++)
+                    {
+                        new_page.push_back(blank_line);
+                    }
+                }
+            }
+
+            prev_line_y_pos = cur_y_pos;
             new_page.push_back(new_line);
         }
-
         new_screenplay_doc.pages.push_back(new_page);
     }
-
-
     
     return new_screenplay_doc;
 }
 
-// MARGINS are relative from 0,0 , the BOTTOM and LEFT
-struct SPMarginsInches
-{
-    float pagewidth =       8.50;
-    float pageheight =      11.00:
-
-    float left =            1.50;
-    float right =           7.50;
-    float top =             10.00;
-    float bottom =          1.00;
-    // Element margins, relative to left side of page
-    float action =          1.50;
-    float character =       3.70;
-    float dialogue =        2.50;
-    float parenthetical =   3.10;
-
-    //TODO: dual dialogue...
-    //TODO: 
 
 
-}
-
-struct SPMarginsPoints
-{
-    //
+SPType get_type_for_line(PDFLine line, SPMarginsInches margins_inches, float resolution_points){
+    // TODO -- calls get_type_for_word
 }
 
 SPType get_type_for_word(PDFWord pdfword, SPMarginsInches margins_inches, float resolution_points) {
-    float charwidth = pdfword.font_size * 0.6;
-
+    float charwidth = pdfword.font_size * 0.6f;
+    float position_tolerance = 0.01f;
     SPMarginsPoints margins; // TODO: calculate the margins in points based on margins_inches and resolution_points...
 
-    if (pdfword.position.y < margins.top && pdfword.position > margins.bottom) { // within vertical content zone
+    auto _within_tolerance = [&a, &position_tolerance](float& b) -> bool {
+        if (abs(a - b) > position_tolerance) return false;
+        return true;
+    };
+
+    if (pdfword.position.y < margins.top && pdfword.position > margins.bottom) 
+    { // within vertical content zone
         
-        if (pdfword.position.x < margins.left){
+        if (pdfword.position.x < margins.left)
+        {
             // verify if it's a scene number
             // it could also be a revision marker...
             // the revision asterisks could also be surrounding / attached to the scene number ...... ow my head
             return  SPType::SP_SCENENUM;
-        } else if (pdfword.position.x > margins.right) {
+        } else if (pdfword.position.x > margins.right) 
+        {
             //figure out if it's a scene number (it probably should be... but still)
             return SPType::SP_SCENENUM;
         }
-        // now the text is definitely within the page content
-        if pdfword.position.x <
+        // within vertical AND horizontal content zone
+
+        // TODO:
+
+
+        // ACTION
+        if (_within_tolerance(margins.action)) 
+        {
+
+            //check for INT. / EXT. or maybe even bold font or smth, otherwise probably action
+            return SP_ACTION;
+        };
+        if (_within_tolerance(margins.character)) return SP_CHARACTER;
+        if (_within_tolerance(margins.dialogue)) return SP_DIALOGUE;
+        if (_within_tolerance(margins.parenthetical)) return SP_PARENTHETICAL;
+        
+        // implement dual dialogue later...
 
         
     }
@@ -131,24 +182,26 @@ SPType get_type_for_word(PDFWord pdfword, SPMarginsInches margins_inches, float 
     // now the text is EITHER above the top margins or below the bottom margins
 
 
-    if (pdfword.position.y > margins.top) { 
-        if (pdfword.position.x < (margins.pagewidth / 3.0f)) {
+    if (pdfword.position.y > margins.top) 
+    { 
+        if (pdfword.position.x < (margins.pagewidth / 3.0f)) 
+        {
             return SPType::NON_CONTENT_TOP;
         }
 
         float wordwidth = charwidth * pdfword.text.size();
         float rightedge = wordwidth + pdfword.position.x;
 
-        if (((rightedge - margins.right) < 0.001f) && (pdfword.text.back() == ".")) {
+        if (((rightedge - margins.right) < position_tolerance) && (pdfword.text.back() == ".")) 
+        {
             return SPType::_PAGENUM;
         }
         return SPType::NON_CONTENT_TOP;
     }
 
-    // could be just extra text or (MORE) or (CONTINUED) at the bottom,
-    // or it could be a footer (??) of some kind...
-    // TODO: right hand margins and bottom margins could use some epsilons of some kind...
-    // add some checking logic here
+    if (pdfword.text == "MORE") return SPType::MORE;
+    if (pdfword.text == "CONTINUED") return SPType::CONTINUED;
+
     return SPType::NON_CONTENT_BOTTOM; // or (MORE) or (CONTINUED) or just some other normal type
     
 
