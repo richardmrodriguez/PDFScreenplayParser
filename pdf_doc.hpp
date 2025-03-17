@@ -3,10 +3,7 @@
 #include <string>
 #include <vector>
 
-#ifndef TEXTPOS_H
-#define TEXTPOS_H
 #include <"text_position.h">
-#endif
 
 struct PDFPageSize 
 {
