@@ -15,7 +15,7 @@ struct PDFPageSize
     float resolution_points = 72.0f;
 }
 
-typedef struct PDFDoc 
+struct PDFDoc 
 {
     vector<PDFPage> pages;
 };
