@@ -4,6 +4,11 @@
 #include <vector>
 #include <array>
 
+enum ScreenplayPageFormat {
+    PS_US,
+    PS_A4
+};
+
 enum SPType {
     SP_ACTION = 0,
 
@@ -52,6 +57,34 @@ enum SPType {
     NON_CONTENT_RIGHT,
     
     _TYPECOUNT
+};
+
+
+struct ScreenplayTextElement {
+    std::string text = "";
+    SPType element_type = SPType::SP_BLANK;
+};
+
+struct ScreenplayLine 
+{
+    std::vector<ScreenplayTextElement> text_elements;
+    std::string scenenum;
+    bool revised = false;
+    bool blank = true;
+};
+struct ScreenplayPage 
+{
+    std::vector<ScreenplayLine> lines;
+    std::string pagenum;
+    bool revised = false;
+    std::string revision_color;
+    ScreenplayPageFormat page_format = PS_US;
+    
+};
+
+struct ScreenplayDoc 
+{
+    std::vector<ScreenplayPage> pages;
 };
 
 
@@ -113,35 +146,4 @@ std::array<std::string, _TYPECOUNT> getSPTypesAsStrings() {
 
 
 
-struct ScreenplayDoc 
-{
-    std::vector<ScreenplayPage> pages;
-};
 
-enum ScreenplayPageFormat {
-    PS_US,
-    PS_A4
-};
-
-struct ScreenplayPage 
-{
-    std::vector<ScreenplayLine> lines;
-    std::string pagenum;
-    bool revised = false;
-    std::string revision_color;
-    ScreenplayPageFormat page_format = PS_US;
-        
-};
-
-struct ScreenplayLine 
-{
-    std::vector<ScreenplayTextElement> text_elements;
-    std::string scenenum;
-    bool revised = false;
-    bool blank = true;
-};
-
-struct ScreenplayTextElement {
-    std::string text = "";
-    SPType element_type = SPType::SP_BLANK;
-};
