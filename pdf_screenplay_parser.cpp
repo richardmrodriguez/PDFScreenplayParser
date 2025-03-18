@@ -2,18 +2,17 @@
 
 #pragma once
 
-#include <"pdf_screenplay_parser.hpp>
 #include <cstddef>
 #include <codecvt>
 #include <locale>
 #include <cmath>
-#include <ceil>
+#include "pdf_screenplay_parser.hpp"
 
 // MARGINS are relative from 0,0 , the BOTTOM and LEFT
 struct SPMarginsInches
 {
     float pagewidth =       8.50;
-    float pageheight =      11.00:
+    float pageheight =      11.00;
 
     float left =            1.50;
     float right =           7.50;
@@ -29,32 +28,47 @@ struct SPMarginsInches
     //TODO: 
 
 
-}
+};
 
 struct SPMarginsPoints
 {
-    //
-}
+    float pagewidth =       72.0 * 8.50;
+    float pageheight =      72.0 * 11.00;
+    float left =            72.0 * 1.50;
+    float right =           72.0 * 7.50;
+    float top =             72.0 * 10.00;
+    float bottom =          72.0 * 1.00;
+    float action =          72.0 * 1.50; // Element margins, relative to left side of page
+    float character =       72.0 * 3.70;
+    float dialogue =        72.0 * 2.50;
+    float parenthetical =   72.0 * 3.10;
 
-ScreenplayDoc get_screenplay_doc(PDFDoc pdfdoc) {
+    //TODO: dual dialogue...
+    //TODO: 
+};
+
+ScreenplayDoc get_screenplay_doc(PDFDoc pdf_doc) {
     ScreenplayDoc new_screenplay_doc;
     new_screenplay_doc.pages.reserve(pdf_doc.pages.size());
 
-    for (size_t p = 0; p < pdfdoc.pages.size(); p++) 
+    for (size_t p = 0; p < pdf_doc.pages.size(); p++) 
     {
-        const PDFPage&  pdfpage = pdfdoc.pages[p];
+        const PDFPage&  pdfpage = pdf_doc.pages[p];
         ScreenplayPage new_page;
         new_page.lines.reserve(pdfpage.lines.size());
         
         float prev_line_y_pos = 0.0f; // used to insert blank lines before adding the current line
         float line_height = 12.0f;
 
+        SPMarginsInches current_margins;
+        float current_resolution = 72.0f;
+
 
         for (size_t l = 0; l < pdfpage.lines.size(); l++) 
         {         
             const PDFLine& pdfline = pdfpage.lines[l];
             ScreenplayLine new_line;
-            new_line.words.reserve(pdfline.words.size());
+            new_line.text_elements.reserve(pdfline.words.size());
             
             for (size_t w = 0; w < pdfline.words.size(); w++) 
             {
@@ -62,11 +76,13 @@ ScreenplayDoc get_screenplay_doc(PDFDoc pdfdoc) {
                 ScreenplayTextElement new_text_element;
                 // slighly more complex logic in here ;
                 // Might need to carry a running "context" of the previous line(s) / type(s) to determine certain elements
-                SPType new_type = get_type_for_word(pdfword);
+                SPType new_type = get_type_for_word(pdfword,
+                                                    current_margins,
+                                                    current_resolution
+                                                    );
 
-                switch new_type 
+                switch(new_type)
                 {
-                    case SPType::NON_CONTENT_LEFT: continue;
                     case SPType::SP_PAGENUM: {
                         new_page.pagenum = pdfword.text;
                         continue;
@@ -110,17 +126,17 @@ ScreenplayDoc get_screenplay_doc(PDFDoc pdfdoc) {
                     int blank_lines = ceil(y_delta / line_height);
                     ScreenplayLine blank_line;
                     ScreenplayTextElement blank_element;
-                    blankline.text_elements.push_back(blank_element);
+                    blank_line.text_elements.push_back(blank_element);
 
                     for (int i = 1; i < blank_lines; i++)
                     {
-                        new_page.push_back(blank_line);
+                        new_page.lines.push_back(blank_line);
                     }
                 }
             }
 
             prev_line_y_pos = cur_y_pos;
-            new_page.push_back(new_line);
+            new_page.lines.push_back(new_line);
         }
         new_screenplay_doc.pages.push_back(new_page);
     }
@@ -139,12 +155,8 @@ SPType get_type_for_word(PDFWord pdfword, SPMarginsInches margins_inches, float 
     float position_tolerance = 0.01f;
     SPMarginsPoints margins; // TODO: calculate the margins in points based on margins_inches and resolution_points...
 
-    auto _within_tolerance = [&a, &position_tolerance](float& b) -> bool {
-        if (abs(a - b) > position_tolerance) return false;
-        return true;
-    };
-
-    if (pdfword.position.y < margins.top && pdfword.position > margins.bottom) 
+    
+    if (pdfword.position.y < margins.top && pdfword.position.y > margins.bottom) 
     { // within vertical content zone
         
         if (pdfword.position.x < margins.left)
@@ -159,9 +171,13 @@ SPType get_type_for_word(PDFWord pdfword, SPMarginsInches margins_inches, float 
             return SPType::SP_SCENENUM;
         }
         // within vertical AND horizontal content zone
-
+        
         // TODO:
-
+        
+        auto _within_tolerance = [&x = pdfword.position.x, &position_tolerance](float& b) -> bool {
+            if (abs(x - b) > position_tolerance) return false;
+            return true;
+        };
 
         // ACTION
         if (_within_tolerance(margins.action)) 
@@ -192,15 +208,15 @@ SPType get_type_for_word(PDFWord pdfword, SPMarginsInches margins_inches, float 
         float wordwidth = charwidth * pdfword.text.size();
         float rightedge = wordwidth + pdfword.position.x;
 
-        if (((rightedge - margins.right) < position_tolerance) && (pdfword.text.back() == ".")) 
+        if (((rightedge - margins.right) < position_tolerance) && (pdfword.text.back() == '.')) 
         {
-            return SPType::_PAGENUM;
+            return SPType::SP_PAGENUM;
         }
         return SPType::NON_CONTENT_TOP;
     }
 
-    if (pdfword.text == "MORE") return SPType::MORE;
-    if (pdfword.text == "CONTINUED") return SPType::CONTINUED;
+    if (pdfword.text == "MORE") return SPType::SP_MORE_CONTINUED;
+    if (pdfword.text == "CONTINUED") return SPType::SP_MORE_CONTINUED;
 
     return SPType::NON_CONTENT_BOTTOM; // or (MORE) or (CONTINUED) or just some other normal type
     

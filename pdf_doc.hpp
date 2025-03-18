@@ -3,29 +3,13 @@
 #include <string>
 #include <vector>
 
-#include <"text_position.h">
+#include "text_position.hpp"
 
 struct PDFPageSize 
 {
     float x = -1.0f;
     float y = -1.0f;
     float resolution_points = 72.0f;
-}
-
-struct PDFDoc 
-{
-    vector<PDFPage> pages;
-};
-
-struct PDFPage 
-{
-    vector<PDFLine> lines;
-    PDFPageSize;
-};
-
-struct PDFLine 
-{
-    vector<PDFWord> words;
 };
 
 struct PDFWord 
@@ -34,4 +18,21 @@ struct PDFWord
     TextPosition position;
     std::string font_name;
     float font_size;
+};
+
+struct PDFLine 
+{
+    std::vector<PDFWord> words;
+    
+};
+
+struct PDFPage 
+{
+    std::vector<PDFLine> lines;
+    PDFPageSize pagesize;
+};
+
+struct PDFDoc 
+{
+    std::vector<PDFPage> pages;
 };

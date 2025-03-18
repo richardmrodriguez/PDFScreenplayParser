@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <array>
 
 enum SPType {
     SP_ACTION = 0,
@@ -51,55 +52,58 @@ enum SPType {
     NON_CONTENT_RIGHT,
     
     _TYPECOUNT
-}
+};
 
 
 //TODO: MISSING TYPES
-std::string SPTypeToString(SPType type) {
+std::string SPTypeToString(SPType type)
+{
     switch (type) {
-        case SP_ACTION:                 return "SP_ACTION";
-        case SP_CHARACTER:              return "SP_CHARACTER";
-        case SP_CHARACTER_EXTENSION:    return "SP_CHARACTER_EXTENSION";
-        case SP_PARENTHETICAL:          return "SP_PARENTHETICAL";
-        case SP_DIALOGUE:               return "SP_DIALOGUE";
-        case SP_DG_MORE_CONTINUED:      return "SP_DG_MORE_CONTINUED";
+        case SP_ACTION:                 return std::string("SP_ACTION");
+        case SP_CHARACTER:              return std::string("SP_CHARACTER");
+        case SP_CHARACTER_EXTENSION:    return std::string("SP_CHARACTER_EXTENSION");
+        case SP_PARENTHETICAL:          return std::string("SP_PARENTHETICAL");
+        case SP_DIALOGUE:               return std::string("SP_DIALOGUE");
+        case SP_DG_MORE_CONTINUED:      return std::string("SP_DG_MORE_CONTINUED");
         //DUAL DIALOGUE
-        case SP_DD_L_CHARACTER:         return "SP_DD_L_CHARACTER";
-        case SP_DD_L_PARENTHETICAL:     return "SP_DD_L_PARENTHETICAL";
-        case SP_DD_L_DIALOGUE:          return "SP_DD_L_DIALOGUE";
-        case SP_DD_L_MORE_CONTINUED:    return "SP_DD_L_MORE_CONTINUED";
-        case SP_DD_R_CHARACTER:         return "SP_DD_R_CHARACTER";
-        case SP_DD_R_PARENTHETICAL:     return "SP_DD_R_PARENTHETICAL";
-        case SP_DD_R_DIALOGUE:          return "SP_DD_R_DIALOGUE";
-        case SP_DD_R_MORE_CONTINUED:    return "SP_DD_R_MORE_CONTINUED";
+        case SP_DD_L_CHARACTER:         return std::string("SP_DD_L_CHARACTER");
+        case SP_DD_L_PARENTHETICAL:     return std::string("SP_DD_L_PARENTHETICAL");
+        case SP_DD_L_DIALOGUE:          return std::string("SP_DD_L_DIALOGUE");
+        case SP_DD_L_MORE_CONTINUED:    return std::string("SP_DD_L_MORE_CONTINUED");
+        case SP_DD_R_CHARACTER:         return std::string("SP_DD_R_CHARACTER");
+        case SP_DD_R_PARENTHETICAL:     return std::string("SP_DD_R_PARENTHETICAL");
+        case SP_DD_R_DIALOGUE:          return std::string("SP_DD_R_DIALOGUE");
+        case SP_DD_R_MORE_CONTINUED:    return std::string("SP_DD_R_MORE_CONTINUED");
         // SCENE HEADING
-        case SP_SCENE_HEADING:          return "SP_SCENE_HEADING";
-        case SP_INT_EXT:                return "SP_SUBLOCATION";
-        case SP_TIME_OF_DAY:            return "SP_LOCATION";
-        case SP_LOCATION:               return "SP_TIME_OF_DAY";
-        case SP_SUBLOCATION:            return "SP_INT_EXT";
-        case SP_TRANSITION:             return "SP_TRANSITION";
-        case SP_MORE_CONTINUED:         return "SP_MORE_CONTINUED"
+        case SP_SCENE_HEADING:          return std::string("SP_SCENE_HEADING");
+        case SP_INT_EXT:                return std::string("SP_SUBLOCATION");
+        case SP_TIME_OF_DAY:            return std::string("SP_LOCATION");
+        case SP_LOCATION:               return std::string("SP_TIME_OF_DAY");
+        case SP_SUBLOCATION:            return std::string("SP_INT_EXT");
+        case SP_TRANSITION:             return std::string("SP_TRANSITION");
+        case SP_MORE_CONTINUED:         return std::string("SP_MORE_CONTINUED");
         // TITLE PAGE
-        case TP_TITLE:                  return "TP_TITLE";
-        case TP_BYLINE:                 return "TP_BYLINE";
-        case TP_AUTHOR:                 return "TP_AUTHOR";
-        case TP_DRAFT_DATE:             return "TP_DRAFT_DATE";
-        case TP_CONTACT:                return "TP_CONTACT";
+        case TP_TITLE:                  return std::string("TP_TITLE");
+        case TP_BYLINE:                 return std::string("TP_BYLINE");
+        case TP_AUTHOR:                 return std::string("TP_AUTHOR");
+        case TP_DRAFT_DATE:             return std::string("TP_DRAFT_DATE");
+        case TP_CONTACT:                return std::string("TP_CONTACT");
         //-------------
-        case NON_CONTENT_TOP:           return "NON_CONTENT_TOP";
-        case NON_CONTENT_BOTTOM:        return "NON_CONTENT_BOTTOM";
-        case NON_CONTENT_LEFT:          return "NON_CONTENT_LEFT";
-        case NON_CONTENT_RIGHT:         return "NON_CONTENT_RIGHT";
-        case SP_OTHER:                  return "SP_OTHER";
-        default:                        return "UNKNOWN";
+        case NON_CONTENT_TOP:           return std::string("NON_CONTENT_TOP");
+        case NON_CONTENT_BOTTOM:        return std::string("NON_CONTENT_BOTTOM");
+        case NON_CONTENT_LEFT:          return std::string("NON_CONTENT_LEFT");
+        case NON_CONTENT_RIGHT:         return std::string("NON_CONTENT_RIGHT");
+        case SP_OTHER:                  return std::string("SP_OTHER");
+        default:                        return std::string("UNKNOWN");
     }
 }
 
-std::array<const char*, _TYPECOUNT> getSPTypesAsStrings() {
-    std::array<const char*, _TYPECOUNT> alltypes;
 
-    for (int = SP_ACTION, i<_TYPECOUNT, i++) {
+
+std::array<std::string, _TYPECOUNT> getSPTypesAsStrings() {
+    std::array<std::string, _TYPECOUNT> alltypes;
+
+    for (int i = SP_ACTION; i < _TYPECOUNT; i++) {
         SPType t = static_cast<SPType>(i);
         alltypes[i] = SPTypeToString(t);
     }
@@ -109,19 +113,19 @@ std::array<const char*, _TYPECOUNT> getSPTypesAsStrings() {
 
 
 
-typedef struct ScreenplayDoc 
+struct ScreenplayDoc 
 {
-    vector<ScreenplayPage> pages;
+    std::vector<ScreenplayPage> pages;
 };
 
 enum ScreenplayPageFormat {
     PS_US,
     PS_A4
-}
+};
 
 struct ScreenplayPage 
 {
-    vector<ScreeplayLine> lines;
+    std::vector<ScreenplayLine> lines;
     std::string pagenum;
     bool revised = false;
     std::string revision_color;
@@ -131,7 +135,7 @@ struct ScreenplayPage
 
 struct ScreenplayLine 
 {
-    vector<ScreenplayTextElement> text_elements;
+    std::vector<ScreenplayTextElement> text_elements;
     std::string scenenum;
     bool revised = false;
     bool blank = true;
@@ -140,4 +144,4 @@ struct ScreenplayLine
 struct ScreenplayTextElement {
     std::string text = "";
     SPType element_type = SPType::SP_BLANK;
-}
+};
