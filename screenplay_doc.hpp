@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SP_DOC_H
+#define SP_DOC_H
 
 #include <string>
 #include <vector>
@@ -64,7 +65,6 @@ struct ScreenplayTextElement {
     std::string text = "";
     SPType element_type = SPType::SP_BLANK;
 };
-
 struct ScreenplayLine 
 {
     std::vector<ScreenplayTextElement> text_elements;
@@ -81,7 +81,6 @@ struct ScreenplayPage
     ScreenplayPageFormat page_format = PS_US;
     
 };
-
 struct ScreenplayDoc 
 {
     std::vector<ScreenplayPage> pages;
@@ -92,3 +91,4 @@ std::string SPTypeToString(SPType type);
 std::array<std::string, _TYPECOUNT> getSPTypesAsStrings();
 
 
+#endif

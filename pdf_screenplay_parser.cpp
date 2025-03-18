@@ -1,7 +1,3 @@
-
-
-#pragma once
-
 #include <cstddef>
 #include <codecvt>
 #include <locale>
@@ -46,6 +42,89 @@ struct SPMarginsPoints
     //TODO: dual dialogue...
     //TODO: 
 };
+
+
+SPType get_type_for_word(PDFWord pdfword, SPMarginsInches margins_inches, float resolution_points) {
+    float charwidth = pdfword.font_size * 0.6f;
+    float position_tolerance = 0.01f;
+    SPMarginsPoints margins; // TODO: calculate the margins in points based on margins_inches and resolution_points...
+
+    
+    if (pdfword.position.y < margins.top && pdfword.position.y > margins.bottom) 
+    { // within vertical content zone
+        
+        if (pdfword.position.x < margins.left)
+        {
+            // verify if it's a scene number
+            // it could also be a revision marker...
+            // the revision asterisks could also be surrounding / attached to the scene number ...... ow my head
+            return  SPType::SP_SCENENUM;
+        } else if (pdfword.position.x > margins.right) 
+        {
+            //figure out if it's a scene number (it probably should be... but still)
+            return SPType::SP_SCENENUM;
+        }
+        // within vertical AND horizontal content zone
+        
+        // TODO:
+        
+        auto _within_tolerance = [&x = pdfword.position.x, &position_tolerance](float& b) -> bool {
+            if (abs(x - b) > position_tolerance) return false;
+            return true;
+        };
+
+        // ACTION
+        if (_within_tolerance(margins.action)) 
+        {
+
+            //check for INT. / EXT. or maybe even bold font or smth, otherwise probably action
+            return SP_ACTION;
+        };
+        if (_within_tolerance(margins.character)) return SP_CHARACTER;
+        if (_within_tolerance(margins.dialogue)) return SP_DIALOGUE;
+        if (_within_tolerance(margins.parenthetical)) return SP_PARENTHETICAL;
+        
+        // implement dual dialogue later...
+
+        
+    }
+
+    // now the text is EITHER above the top margins or below the bottom margins
+
+
+    if (pdfword.position.y > margins.top) 
+    { 
+        if (pdfword.position.x < (margins.pagewidth / 3.0f)) 
+        {
+            return SPType::NON_CONTENT_TOP;
+        }
+
+        float wordwidth = charwidth * pdfword.text.size();
+        float rightedge = wordwidth + pdfword.position.x;
+
+        if (((rightedge - margins.right) < position_tolerance) && (pdfword.text.back() == '.')) 
+        {
+            return SPType::SP_PAGENUM;
+        }
+        return SPType::NON_CONTENT_TOP;
+    }
+
+    if (pdfword.text == "MORE") return SPType::SP_MORE_CONTINUED;
+    if (pdfword.text == "CONTINUED") return SPType::SP_MORE_CONTINUED;
+
+    return SPType::NON_CONTENT_BOTTOM; // or (MORE) or (CONTINUED) or just some other normal type
+    
+
+    
+}
+
+
+SPType get_type_for_line(PDFLine line, SPMarginsInches margins_inches, float resolution_points){
+    // TODO -- calls get_type_for_word
+}
+
+
+
 
 ScreenplayDoc get_screenplay_doc(PDFDoc pdf_doc) {
     ScreenplayDoc new_screenplay_doc;
@@ -143,85 +222,3 @@ ScreenplayDoc get_screenplay_doc(PDFDoc pdf_doc) {
     
     return new_screenplay_doc;
 }
-
-
-
-SPType get_type_for_line(PDFLine line, SPMarginsInches margins_inches, float resolution_points){
-    // TODO -- calls get_type_for_word
-}
-
-SPType get_type_for_word(PDFWord pdfword, SPMarginsInches margins_inches, float resolution_points) {
-    float charwidth = pdfword.font_size * 0.6f;
-    float position_tolerance = 0.01f;
-    SPMarginsPoints margins; // TODO: calculate the margins in points based on margins_inches and resolution_points...
-
-    
-    if (pdfword.position.y < margins.top && pdfword.position.y > margins.bottom) 
-    { // within vertical content zone
-        
-        if (pdfword.position.x < margins.left)
-        {
-            // verify if it's a scene number
-            // it could also be a revision marker...
-            // the revision asterisks could also be surrounding / attached to the scene number ...... ow my head
-            return  SPType::SP_SCENENUM;
-        } else if (pdfword.position.x > margins.right) 
-        {
-            //figure out if it's a scene number (it probably should be... but still)
-            return SPType::SP_SCENENUM;
-        }
-        // within vertical AND horizontal content zone
-        
-        // TODO:
-        
-        auto _within_tolerance = [&x = pdfword.position.x, &position_tolerance](float& b) -> bool {
-            if (abs(x - b) > position_tolerance) return false;
-            return true;
-        };
-
-        // ACTION
-        if (_within_tolerance(margins.action)) 
-        {
-
-            //check for INT. / EXT. or maybe even bold font or smth, otherwise probably action
-            return SP_ACTION;
-        };
-        if (_within_tolerance(margins.character)) return SP_CHARACTER;
-        if (_within_tolerance(margins.dialogue)) return SP_DIALOGUE;
-        if (_within_tolerance(margins.parenthetical)) return SP_PARENTHETICAL;
-        
-        // implement dual dialogue later...
-
-        
-    }
-
-    // now the text is EITHER above the top margins or below the bottom margins
-
-
-    if (pdfword.position.y > margins.top) 
-    { 
-        if (pdfword.position.x < (margins.pagewidth / 3.0f)) 
-        {
-            return SPType::NON_CONTENT_TOP;
-        }
-
-        float wordwidth = charwidth * pdfword.text.size();
-        float rightedge = wordwidth + pdfword.position.x;
-
-        if (((rightedge - margins.right) < position_tolerance) && (pdfword.text.back() == '.')) 
-        {
-            return SPType::SP_PAGENUM;
-        }
-        return SPType::NON_CONTENT_TOP;
-    }
-
-    if (pdfword.text == "MORE") return SPType::SP_MORE_CONTINUED;
-    if (pdfword.text == "CONTINUED") return SPType::SP_MORE_CONTINUED;
-
-    return SPType::NON_CONTENT_BOTTOM; // or (MORE) or (CONTINUED) or just some other normal type
-    
-
-    
-}
-
-
